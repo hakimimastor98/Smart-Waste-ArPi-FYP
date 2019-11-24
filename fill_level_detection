@@ -1,0 +1,160 @@
+#include <DHT.h>  // Including library for dht
+#include <NewPing.h>
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+
+#include <ESP8266WiFi.h>
+
+#define TRIGGER_PIN  D5  // Digital Arduino pin tied to trigger pin on the ultrasonic sensor 9. in nodemcu, 2 is d4
+#define ECHO_PIN     D6  // Digital Arduino pin tied to echo pin on the ultrasonic sensor 10. 0 is d3 in nodemcu
+#define MAX_DISTANCE 30 // Maximum distance we want to ping for (in centimeters).
+
+String apiKey = "xxxx";     //  Enter your Write API key from ThingSpeak
+
+const char* ssid     = "xxxxx";         // replace with your wifi credentials
+const char* password = "xxxxxx;
+const char* server = "api.thingspeak.com";  //connecting to thingspeak server, you can replace this with other such as GCP, AWS
+
+int thresh [11] = {20,18,16,14,12,10,8,6,4,2,0};
+int percentage;
+#define DHTPIN D7          //pin where the dht11 is connected
+
+DHT dht(DHTPIN, DHT22);
+LiquidCrystal_I2C lcd(0x3F, 16, 2, POSITIVE); //early 0x27 for maker uno ,recheck
+NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE); 
+WiFiClient client;
+ 
+void setup() 
+{
+       Serial.begin(115200);
+       delay(10);
+       dht.begin();
+       //Wire.begin(D4,D3);
+
+       lcd.begin(16,2);//Defining 16 columns and 2 rows of lcd display
+       Wire.begin(2,0);
+    
+       lcd.backlight();//To Power ON the back light
+       
+//lcd.backlight();// To Power OFF the back light
+       //lcd.init();
+ 
+     //  Serial.println("Connecting to ");
+      // Serial.println(ssid);
+ 
+ 
+       WiFi.begin(ssid, password);
+ 
+      while (WiFi.status() != WL_CONNECTED) 
+     {
+            delay(500);
+           // Serial.print(".");
+     }
+    //  Serial.println("");
+    //  Serial.println("WiFi connected");
+ 
+}
+void loop(){
+  
+delay(500);                      // Wait 50ms between pings (about 20 pings/sec) so that there's time to respond.
+unsigned int uS = sonar.ping(); // Send ping, get ping time in microseconds (uS).
+int distance = uS / US_ROUNDTRIP_CM; // Convert microseconds into distance in centimeters.
+int fill_level = 21-distance;
+float g = analogRead(A0);
+float h = dht.readHumidity();
+float t = dht.readTemperature();
+
+if(distance<thresh[0]&&distance>=thresh[1]){
+    Serial.print(", 10% Full");
+    percentage=10;
+    }
+  else if(distance<thresh[1]&&distance>=thresh[2]){
+    Serial.print(", 20% Full");
+    percentage=20;
+  }
+  else if(distance<thresh[2]&&distance>=thresh[3]){
+    Serial.print(", 30% Full");
+    percentage=30;
+  }
+  else if(distance<thresh[3]&&distance>=thresh[4]){
+    Serial.print(", 40% Full");
+    percentage=40;
+  }
+  else if(distance<thresh[4]&&distance>=thresh[5]){
+    Serial.print(", 50% Full");
+    percentage=50;
+  }
+  else if(distance<thresh[5]&&distance>=thresh[6]){
+    Serial.print(", 60% Full");
+    percentage=60;
+  }
+  else if(distance<thresh[6]&&distance>=thresh[7]){
+    Serial.print(", 70% Full");
+    percentage=70;
+  }
+  else if(distance<thresh[7]&&distance>=thresh[8]){
+    Serial.print(", 80% Full");
+    percentage=80;
+  }
+  else if(distance<thresh[8]&&distance>=thresh[9]){
+    Serial.print(", 90% Full");
+    percentage=90;
+  }
+  else if(distance<thresh[9]&&distance>=thresh[10]){
+    Serial.print(", 100% Full");
+    percentage=100;
+  }
+  else{
+    Serial.print(", Empty"); // Empty will print if you take the sensor out of the bin or the sensor is not getting a reading
+    percentage=0;
+  }
+
+
+      
+           //   if (isnan(h) || isnan(t)) 
+               //  {
+                //     Serial.println("Failed to read from DHT sensor!");
+               //       return;
+              //   }
+
+                         if (client.connect(server,80))   //   "184.106.153.149" or api.thingspeak.com
+                      {  
+                            
+                             String postStr = apiKey;
+                             postStr +="&field1=";
+                             postStr += String(t);
+                             postStr +="&field2=";
+                             postStr += String(h);
+                             postStr +="&field3=";
+                             postStr += String(g/1023*100);
+                             postStr +="&field4=";
+                             postStr += String(fill_level);
+                             postStr +="&field5=";
+                             postStr += String(percentage);
+                             postStr += "\r\n\r\n";
+ 
+                             client.print("POST /update HTTP/1.1\n");
+                             client.print("Host: api.thingspeak.com\n");
+                             client.print("Connection: close\n");
+                             client.print("X-THINGSPEAKAPIKEY: "+apiKey+"\n");
+                             client.print("Content-Type: application/x-www-form-urlencoded\n");
+                             client.print("Content-Length: ");
+                             client.print(postStr.length());
+                             client.print("\n\n");
+                             client.print(postStr);
+ 
+                           //  Serial.print("Temperature: ");
+                           //  Serial.print(t);
+                           //  Serial.print(" degrees Celcius, Humidity: ");
+                            // Serial.print(h);
+                           //  Serial.print("Gas Level: ");
+                           //  Serial.println(g/1023*100);
+                            // Serial.println("%. Send to Thingspeak.");
+                        }
+          client.stop();
+ 
+        //  Serial.println("Waiting...");
+  
+  // thingspeak needs minimum 15 sec delay between updates
+  delay(60000); 
+}
