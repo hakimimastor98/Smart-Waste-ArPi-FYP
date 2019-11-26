@@ -149,7 +149,7 @@ if(distance<thresh[0]&&distance>=thresh[1]){
                             // Serial.print(h);
                            //  Serial.print("Gas Level: ");
                            //  Serial.println(g/1023*100);
-                            // Serial.println("%. Send to Thingspeak.");
+                            /// Serial.println("%. Send to Thingspeak.");
                         }
           client.stop();
  
