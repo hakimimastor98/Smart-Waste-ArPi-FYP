@@ -10,10 +10,7 @@ Servo myservo2;
 #define LED_G 26 //define green LED pin
 #define LED_R 24 //define red LED
 #define BUZZER 22 //buzzer pin
-int pos = 20;  
-const int trigPin = 8;
-const int echoPin = 4;
-const int led = 13;
+
 
 long duration;
 float distance;
