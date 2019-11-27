@@ -7,9 +7,9 @@
 Servo myservo;
 Servo myservo1;
 Servo myservo2;
-#define LED_G 22 //define green LED pin
+#define LED_G 26 //define green LED pin
 #define LED_R 24 //define red LED
-#define BUZZER 26 //buzzer pin
+#define BUZZER 22 //buzzer pin
 int pos = 20;  
 const int trigPin = 8;
 const int echoPin = 4;
@@ -20,29 +20,19 @@ float distance;
 MFRC522 mfrc522(SS_PIN, RST_PIN);  // Create MFRC522 instance
 
 void setup() {
-	Serial.begin(9600);   // Initiate a serial communication
+  Serial.begin(9600);   // Initiate a serial communication
   SPI.begin();      // Initiate  SPI bus
   mfrc522.PCD_Init();   // Initiate MFRC522
-  myservo2.attach(9); //servo pin
+  myservo2.attach(6); //servo pin
   myservo2.write(0); //servo start position
   
-  myservo.attach(7);
-  myservo1.attach(6);
-  pinMode(trigPin, OUTPUT);
-  pinMode(echoPin, INPUT); 
-  pinMode(led, OUTPUT);
-  myservo.write(pos);
-  myservo1.write(pos);
-  pinMode(BUZZER, OUTPUT);
-  noTone(BUZZER);
-  pinMode(LED_G, OUTPUT);
-  pinMode(LED_R, OUTPUT);
+ 
 }
 
 void loop() {
 
-  openingmodule();
-	// Look for new cards
+  
+  // Look for new cards
   if ( ! mfrc522.PICC_IsNewCardPresent()) 
   {
     return;
@@ -90,29 +80,3 @@ void loop() {
     noTone(BUZZER);
   }
 }
-void openingmodule(){
-  digitalWrite(trigPin, LOW);
-  delayMicroseconds(2);
-  digitalWrite(trigPin, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(trigPin, LOW);
-
-  duration = pulseIn(echoPin, HIGH);
-  distance = 0.034*(duration/2);
-  //Serial.println(distance);
-  if (distance < 27)
-  {
-    digitalWrite(led,HIGH);
-    myservo.write(pos+175);
-    myservo1.write(pos+175);
-    delay(3000);
-  }
-  else 
-  {
-    digitalWrite(led,LOW);
-    myservo.write(pos);
-    myservo1.write(pos);
-  }
-  delay(300);
-  
-  }
