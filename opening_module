@@ -156,9 +156,10 @@ void loop() {
   else{
     Serial.print(", Empty"); // Empty will print if you take the sensor out of the bin or the sensor is not getting a reading
     percentage=0;
-    digitalWrite(LED_R, HIGH);
+    openingmodule();
+    digitalWrite(LED_G, HIGH);
     delay(50);
-    digitalWrite(LED_R, LOW);
+    digitalWrite(LED_G, LOW);
   }
   Serial.println();
   delay(1000);
