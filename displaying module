@@ -3,8 +3,7 @@
 #include <SPI.h>
 #include <Servo.h>
 #include <LiquidCrystal_I2C.h>
-const int trigPin = 6;
-const int echoPin = 7;
+
 #define TRIGGER_PIN 8 // Digital Arduino pin tied to trigger pin on the ultrasonic sensor 9. in nodemcu, 2 is d4
 #define ECHO_PIN    9 // Digital Arduino pin tied to echo pin on the ultrasonic sensor 10. 0 is d3 in nodemcu
 Servo myservo ;
@@ -14,7 +13,7 @@ Servo myservo ;
 LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE); 
 Servo myservo1;
 int pos = 20;
-const int led = 13;
+
 long duration;
 float distance;
 #define MAX_DISTANCE 30 // Maximum distance we want to ping for (in centimeters).
@@ -22,7 +21,7 @@ float distance;
 //LiquidCrystal_I2C lcd(0x3F, 16, 2, POSITIVE); //early 0x27 for maker uno
 NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE); // NewPing setup of pins and maximum distance. Trigger pin sends out 
                                                     // the sound wave and the echo pin recieves it when it bounces back.
-int thresh [11] = {20,18,16,14,12,10,8,6,4,2,0}; // Create an array for thresholds. Each number in the array represents a distance. 
+int thresh [11] = {25,23,21,19,17,15,13,11,9,7,5}; // Create an array for thresholds. Each number in the array represents a distance. 
 int percentage;
 void setup() {
   
@@ -38,9 +37,8 @@ void setup() {
   pinMode(LED_Y, OUTPUT);
 
 
-  pinMode(trigPin, OUTPUT);
-  pinMode(echoPin, INPUT); 
-  pinMode(led, OUTPUT);
+
+  
   myservo.write(pos);
   myservo1.write(pos);
   
@@ -67,7 +65,7 @@ void loop() {
   if(distance<thresh[0]&&distance>=thresh[1]){
     Serial.print(", 10% Full");
     percentage=10;
-    openingmodule();
+    
     digitalWrite(LED_G, HIGH);
     delay(50);
     digitalWrite(LED_G, LOW);
@@ -77,7 +75,7 @@ void loop() {
   else if(distance<thresh[1]&&distance>=thresh[2]){
     Serial.print(", 20% Full");
     percentage=20;
-    openingmodule();
+    
     digitalWrite(LED_G, HIGH);
     delay(50);
     digitalWrite(LED_G, LOW);
@@ -86,7 +84,7 @@ void loop() {
   else if(distance<thresh[2]&&distance>=thresh[3]){
     Serial.print(", 30% Full");
     percentage=30;
-    openingmodule();
+    
     digitalWrite(LED_G, HIGH);
     delay(50);
     digitalWrite(LED_G, LOW);
@@ -95,7 +93,7 @@ void loop() {
   else if(distance<thresh[3]&&distance>=thresh[4]){
     Serial.print(", 40% Full");
     percentage=40;
-    openingmodule();
+    
     digitalWrite(LED_G, HIGH);
     delay(50);
     digitalWrite(LED_G, LOW);
@@ -104,7 +102,7 @@ void loop() {
   else if(distance<thresh[4]&&distance>=thresh[5]){
     Serial.print(", 50% Full");
     percentage=50;
-    openingmodule();
+    
     digitalWrite(LED_G, HIGH);
     delay(50);
     digitalWrite(LED_G, LOW);
@@ -113,7 +111,7 @@ void loop() {
   else if(distance<thresh[5]&&distance>=thresh[6]){
     Serial.print(", 60% Full");
     percentage=60;
-    openingmodule();
+    
     digitalWrite(LED_G, HIGH);
     delay(50);
     digitalWrite(LED_G, LOW);
@@ -122,7 +120,7 @@ void loop() {
   else if(distance<thresh[6]&&distance>=thresh[7]){
     Serial.print(", 70% Full");
     percentage=70;
-    openingmodule();
+    
     digitalWrite(LED_G, HIGH);
     delay(50);
     digitalWrite(LED_G, LOW);
@@ -131,7 +129,7 @@ void loop() {
   else if(distance<thresh[7]&&distance>=thresh[8]){
     Serial.print(", 80% Full");
     percentage=80;
-    openingmodule();
+    
     digitalWrite(LED_Y, HIGH);
     delay(50);
     digitalWrite(LED_Y, LOW);
@@ -140,7 +138,7 @@ void loop() {
   else if(distance<thresh[8]&&distance>=thresh[9]){
     Serial.print(", 90% Full");
     percentage=90;
-    openingmodule();
+    
     digitalWrite(LED_Y, HIGH);
     delay(50);
     digitalWrite(LED_Y, LOW);
@@ -156,7 +154,7 @@ void loop() {
   else{
     Serial.print(", Empty"); // Empty will print if you take the sensor out of the bin or the sensor is not getting a reading
     percentage=0;
-    openingmodule();
+    
     digitalWrite(LED_G, HIGH);
     delay(50);
     digitalWrite(LED_G, LOW);
@@ -168,32 +166,3 @@ void loop() {
   
 
 }
-
-void openingmodule(){
-  digitalWrite(trigPin, LOW);
-  delayMicroseconds(2);
-  digitalWrite(trigPin, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(trigPin, LOW);
-
-  duration = pulseIn(echoPin, HIGH);
-  distance = 0.034*(duration/2);
-  //Serial.println(distance);
-  if (distance < 27)
-  {
-    digitalWrite(led,HIGH);
-    myservo.write(pos+175);
-    myservo1.write(pos+175);
-   
-    delay(300);
-  }
-  else 
-  {
-    digitalWrite(led,LOW);
-    myservo.write(pos);
-    myservo1.write(pos);
-   
-  }
-  delay(300);
-  
-  }
