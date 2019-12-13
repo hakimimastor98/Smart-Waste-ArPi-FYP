@@ -18,7 +18,7 @@ const char* ssid     = "Auntie Yong Unifi@unifi";         // The SSID (name) of 
 const char* password = "123456810";
 const char* server = "api.thingspeak.com";
 unsigned long myChannelNumber = 915616;
-int thresh [11] = {20,18,16,14,12,10,8,6,4,2,0};
+int thresh [11] = {24,22,20,18,16,14,12,10,8,6,4};
 int percentage;
 #define DHTPIN D7          //pin where the dht11 is connected
 TinyGPSPlus gps;
@@ -76,7 +76,7 @@ lonbuf += (String(longitude, 6));
 delay(500);                      // Wait 50ms between pings (about 20 pings/sec) so that there's time to respond.
 unsigned int uS = sonar.ping(); // Send ping, get ping time in microseconds (uS).
 int distance = uS / US_ROUNDTRIP_CM; // Convert microseconds into distance in centimeters.
-int fill_level = 21-distance;
+int fill_level = 25-distance;
 float g = analogRead(A0);
 float h = dht.readHumidity();
 float t = dht.readTemperature();
