@@ -2,23 +2,28 @@
 #include <NewPing.h>
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
-
+#include <TinyGPS++.h>
+#include <SoftwareSerial.h>
+#include "ThingSpeak.h"
 #include <ESP8266WiFi.h>
-
+const int flame = D0;
 #define TRIGGER_PIN  D5  // Digital Arduino pin tied to trigger pin on the ultrasonic sensor 9. in nodemcu, 2 is d4
 #define ECHO_PIN     D6  // Digital Arduino pin tied to echo pin on the ultrasonic sensor 10. 0 is d3 in nodemcu
 #define MAX_DISTANCE 30 // Maximum distance we want to ping for (in centimeters).
 
-String apiKey = "xxxx";     //  Enter your Write API key from ThingSpeak
-
-const char* ssid     = "xxxxx";         // replace with your wifi credentials
-const char* password = "xxxxxx;
-const char* server = "api.thingspeak.com";  //connecting to thingspeak server, you can replace this with other such as GCP, AWS
-
+String apiKey = "KMHMV9FCVKWVAVH1";     //  Enter your Write API key from ThingSpeak
+static const int RXPin = 4, TXPin = 5;
+static const uint32_t GPSBaud = 9600;
+const char* ssid     = "Auntie Yong Unifi@unifi";         // The SSID (name) of the Wi-Fi network you want to connect to
+const char* password = "123456810";
+const char* server = "api.thingspeak.com";
+unsigned long myChannelNumber = 915616;
 int thresh [11] = {20,18,16,14,12,10,8,6,4,2,0};
 int percentage;
 #define DHTPIN D7          //pin where the dht11 is connected
-
+TinyGPSPlus gps;
+const char * myWriteAPIKey = "KMHMV9FCVKWVAVH1";
+SoftwareSerial ss(RXPin, TXPin);
 DHT dht(DHTPIN, DHT22);
 LiquidCrystal_I2C lcd(0x3F, 16, 2, POSITIVE); //early 0x27 for maker uno ,recheck
 NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE); 
@@ -28,11 +33,13 @@ void setup()
 {
        Serial.begin(115200);
        delay(10);
+       ss.begin(GPSBaud);
        dht.begin();
        //Wire.begin(D4,D3);
-
+       pinMode(flame,INPUT);
        lcd.begin(16,2);//Defining 16 columns and 2 rows of lcd display
        Wire.begin(2,0);
+       ThingSpeak.begin(client);
     
        lcd.backlight();//To Power ON the back light
        
@@ -54,8 +61,18 @@ void setup()
     //  Serial.println("WiFi connected");
  
 }
+
 void loop(){
-  
+// This sketch displays information every time a new sentence is correctly encoded.
+
+double latitude = (gps.location.lat());
+double longitude = (gps.location.lng());
+
+String latbuf;
+latbuf += (String(latitude, 6));
+String lonbuf;
+
+lonbuf += (String(longitude, 6));
 delay(500);                      // Wait 50ms between pings (about 20 pings/sec) so that there's time to respond.
 unsigned int uS = sonar.ping(); // Send ping, get ping time in microseconds (uS).
 int distance = uS / US_ROUNDTRIP_CM; // Convert microseconds into distance in centimeters.
@@ -63,7 +80,7 @@ int fill_level = 21-distance;
 float g = analogRead(A0);
 float h = dht.readHumidity();
 float t = dht.readTemperature();
-
+int f = digitalRead(flame);
 if(distance<thresh[0]&&distance>=thresh[1]){
     Serial.print(", 10% Full");
     percentage=10;
@@ -132,6 +149,10 @@ if(distance<thresh[0]&&distance>=thresh[1]){
                              postStr +="&field5=";
                              postStr += String(percentage);
                              postStr += "\r\n\r\n";
+                             postStr +="&field6=";
+                             postStr += String(f);
+                             postStr += "\r\n\r\n";
+                             
  
                              client.print("POST /update HTTP/1.1\n");
                              client.print("Host: api.thingspeak.com\n");
@@ -149,7 +170,7 @@ if(distance<thresh[0]&&distance>=thresh[1]){
                             // Serial.print(h);
                            //  Serial.print("Gas Level: ");
                            //  Serial.println(g/1023*100);
-                            /// Serial.println("%. Send to Thingspeak.");
+                            // Serial.println("%. Send to Thingspeak.");
                         }
           client.stop();
  
