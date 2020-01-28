@@ -1,33 +1,58 @@
-#include <Servo.h> 
+#include <NewPing.h> // This library allows us to search (or "ping") for the nearest object.
+#include <Wire.h>
 #include <SPI.h>
 #include <MFRC522.h>
+#include <Servo.h>
+#include <LiquidCrystal_I2C.h>
 
+#define TRIGGER_PIN 8 // Digital Arduino pin tied to trigger pin on the ultrasonic sensor 9. in nodemcu, 2 is d4
+#define ECHO_PIN    9 // Digital Arduino pin tied to echo pin on the ultrasonic sensor 10. 0 is d3 in nodemcu
 #define RST_PIN         5          // Configurable, see typical pin layout above
 #define SS_PIN          53
-#define trigPin 9
-#define echoPin 8
-Servo myservo2;
+LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE); 
+Servo accessservo;
+Servo continuousservoo;
+Servo continuousservo;
 #define LED_G 26 //define green LED pin
 #define LED_R 24 //define red LED
 #define BUZZER 22 //buzzer pin
-int thresh [11] = {25,23,21,19,17,15,13,11,9,7,5};
-Servo myservo;
 MFRC522 mfrc522(SS_PIN, RST_PIN);
-void setup() 
-{ 
-  Serial.begin(9600);
+long duration;
+float distance;
+#define MAX_DISTANCE 30 // Maximum distance we want to ping for (in centimeters).
+ //I2C pins declaration
+//LiquidCrystal_I2C lcd(0x3F, 16, 2, POSITIVE); //early 0x27 for maker uno
+NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE); // NewPing setup of pins and maximum distance. Trigger pin sends out 
+                                                    // the sound wave and the echo pin recieves it when it bounces back.
+int thresh [11] = {25,23,21,19,17,15,13,11,9,7,5}; // Create an array for thresholds. Each number in the array represents a distance. 
+int percentage;
+void setup() {
+  
+  
+  lcd.begin(16,2);//Defining 16 columns and 2 rows of lcd display
+  lcd.backlight();
+  Serial.begin(115200); // Open serial monitor at 115200 baud to see distance and threshold results.
+//  Wire.begin(2,0);
   SPI.begin();
   mfrc522.PCD_Init();   // Initiate MFRC522
-  myservo2.attach(6); //servo pin
-  myservo2.write(0); //servo start position
-  pinMode(trigPin, OUTPUT);
-  digitalWrite(trigPin, LOW);
-  pinMode(echoPin, INPUT);
-  myservo.attach(2);
-  myservo.write(89.8);
-  Serial.println(F("Scan your card for The Smart Bin authorization"));
-  //myservo.writeMicroseconds(1500);  // set servo to mid-point
+  accessservo.attach(6); //servo pin
+  accessservo.write(0); //servo start position
+
+  continuousservo.attach(7);
+  continuousservo.write(89.8);
+  continuousservoo.attach(4);
+  continuousservoo.write(89.8);
+
+
+  
+ // lcd.begin(16,2);//Defining 16 columns and 2 rows of lcd display
+ // lcd.backlight();//To Power ON the back light
+//lcd.backlight();// To Power OFF the back light
 }
+void loop(){
+  displaymodule();
+  rfidreading();
+  }
 void rfidreading(){
   // Look for new cards
   if ( ! mfrc522.PICC_IsNewCardPresent()) 
@@ -40,127 +65,147 @@ void rfidreading(){
     return;
   }
   //Show UID on serial monitor
-  Serial.print("UID tag :");
+  //Serial.print("UID tag :");
   String content= "";
   byte letter;
   for (byte i = 0; i < mfrc522.uid.size; i++) 
   {
-     Serial.print(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " ");
-     Serial.print(mfrc522.uid.uidByte[i], HEX);
+     //Serial.print(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " ");
+     //Serial.print(mfrc522.uid.uidByte[i], HEX);
      content.concat(String(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " "));
      content.concat(String(mfrc522.uid.uidByte[i], HEX));
   }
-  Serial.println();
-  Serial.print("Message : ");
+  //Serial.println();
+  //Serial.print("Message : ");
   content.toUpperCase();
   if (content.substring(1) == "89 D4 7C 48") //change here the UID of the card/cards that you want to give access
   {
-    Serial.println("Authorized access");
-    Serial.println();
+   // Serial.println("Authorized access");
+   // Serial.println();
     delay(500);
     digitalWrite(LED_G, HIGH);
-    tone(BUZZER, 500);
+   // tone(BUZZER, 500);
     delay(300);
-    noTone(BUZZER);
-    myservo2.write(80);
+    //noTone(BUZZER);
+    accessservo.write(80);
     delay(5000);
-    myservo2.write(0);
+    accessservo.write(0);
     digitalWrite(LED_G, LOW);
   }
  
  else   {
-    Serial.println(" Access denied");
+   // Serial.println(" Access denied");
     digitalWrite(LED_R, HIGH);
-    tone(BUZZER, 300);
+   // tone(BUZZER, 300);
     delay(1000);
     digitalWrite(LED_R, LOW);
-    noTone(BUZZER);
+    //noTone(BUZZER);
   }
  } 
-
-void compressor(){
-  digitalWrite(trigPin, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(trigPin, LOW);
-  long duration = pulseIn(echoPin, HIGH);
-  long distance = (duration/2) / 29.1;
-  //Serial.print(distance);
-  //Serial.println(" cm");
+void displaymodule() {
+  
+  delay(50);                      // Wait 50ms between pings (about 20 pings/sec) so that there's time to respond.
+  unsigned int uS = sonar.ping(); // Send ping, get ping time in microseconds (uS).
+  int distance = uS / US_ROUNDTRIP_CM; // Convert microseconds into distance in centimeters.
+  //Serial.print(distance); // Print distance.
+ // Serial.print("cm");
+  lcd.setCursor(0,0); //Defining positon to write from first row,first column .
+  lcd.print("ArPi Fill Level"); //You can write 16 Characters per line .
+  lcd.setCursor(0,1);  //Defining positon to write from second row,first column .
+  lcd.print("Percentage:");
+  lcd.print(percentage);
+  lcd.print(" %");
+  
+  
   if(distance<thresh[0]&&distance>=thresh[1]){
-    //Serial.print(", 10% Full");
-    
+   // Serial.print(", 10% Full");
+    percentage=10;
+
     
     
     }
   else if(distance<thresh[1]&&distance>=thresh[2]){
-   // Serial.print(", 20% Full");
+    //Serial.print(", 20% Full");
+    percentage=20;
     
+
     
   }
   else if(distance<thresh[2]&&distance>=thresh[3]){
-   // Serial.print(", 30% Full");
-    
-    
+    //Serial.print(", 30% Full");
+    percentage=30;
+
   }
   else if(distance<thresh[3]&&distance>=thresh[4]){
    // Serial.print(", 40% Full");
-    
+    percentage=40;
+
    
   }
   else if(distance<thresh[4]&&distance>=thresh[5]){
-    //Serial.print(", 50% Full");
-    
-    
+   // Serial.print(", 50% Full");
+    percentage=50;
+
   }
   else if(distance<thresh[5]&&distance>=thresh[6]){
-   //Serial.print(", 60% Full");
+    //Serial.print(", 60% Full");
+    percentage=60;
+
     
   }
   else if(distance<thresh[6]&&distance>=thresh[7]){
-    //Serial.print(", 70% Full");
+   // Serial.print(", 70% Full");
+    percentage=70;
     
-    
-    
+ 
+   
   }
   else if(distance<thresh[7]&&distance>=thresh[8]){
     //Serial.print(", 80% Full");
-    myservo.write(100);
+    percentage=80;
+    continuousservo.write(100);
+    continuousservoo.write(100);
     delay(1350);
-    myservo.write(80);
-    delay(2400);
-    myservo.write(89.8);
+    continuousservo.write(80);
+    continuousservoo.write(80);
+    delay(2000);
+    continuousservo.write(89.8);
+    continuousservoo.write(89.8);
     
+
     
-   
   }
   else if(distance<thresh[8]&&distance>=thresh[9]){
-    //Serial.print(", 90% Full");
-    myservo.write(100);
+   // Serial.print(", 90% Full");
+    percentage=90;
+    continuousservo.write(100);
+    continuousservoo.write(100);
     delay(1350);
-    myservo.write(80);
-    delay(2400);
-    myservo.write(89.8);
+    continuousservo.write(80);
+    continuousservoo.write(80);
+    delay(2000);
+    continuousservo.write(89.8);
+    continuousservoo.write(89.8);
     
     
     
   }
   else if(distance<thresh[9]&&distance>=thresh[10]){
-    //Serial.print(", 100% Full");
-    myservo.write(100);
-    delay(1350);
-    myservo.write(80);
-    delay(2400);
-    myservo.write(89.8);
+  //  Serial.print(", 100% Full");
+    percentage=100;
+    
+
   }
   else{
-    //Serial.print(", Empty"); // Empty will print if you take the sensor out of the bin or the sensor is not getting a reading
-    //myservo.write(89.5);
+  //  Serial.print(", Empty"); // Empty will print if you take the sensor out of the bin or the sensor is not getting a reading
+    percentage=0;
+    
+   
   }
-  delay(1200);
+ // Serial.println();
+  delay(1000);
+
   
-  }
-void loop() {
-  rfidreading();
-  compressor();
   
-  } 
+
+}
