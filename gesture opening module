@@ -1,11 +1,12 @@
 #include <Servo.h>
 #include <Wire.h>
 #include <SparkFun_APDS9960.h>
-Servo myservo1;  // create servo object to control a servo
+
 
 // Pins
 #define APDS9960_INT    2 // Needs to be an interrupt pin
 Servo myservo;
+Servo myservoo;
 // Constants
 
 // Global Variables
@@ -16,10 +17,10 @@ void setup() {
 
   // Set interrupt pin as input
   pinMode(APDS9960_INT, INPUT);
-  myservo.attach(7);
-  myservo.write(0);
-  myservo1.attach(6);
-  myservo1.write(180);
+  myservo.attach(8);
+  myservo.write(90);
+  myservoo.attach(9);
+ myservoo.write(90);
   // Initialize Serial port
   Serial.begin(9600);
   Serial.println();
@@ -63,55 +64,72 @@ void handleGesture() {
     switch ( apds.readGesture() ) {
       case DIR_UP:
         Serial.println("UP");
-        myservo.write(180);
-        myservo1.write(0);
-        delay(2000);
-        myservo.write(0);
-        myservo1.write(180);
+     myservo.write(100);
+      myservoo.write(80);
+      delay(3000);
+      myservo.write(80);
+      myservoo.write(100);
+      delay(3000);
+       myservo.write(90);
+     myservoo.write(90);
         break;
       case DIR_DOWN:
-        Serial.println("DOWN");
-        myservo.write(180);
-        myservo1.write(0);
-        delay(2000);
-        myservo.write(0);
-        myservo1.write(180);
+        myservo.write(100);
+      myservoo.write(80);
+      delay(3000);
+      myservo.write(80);
+      myservoo.write(100);
+      delay(3000);
+       myservo.write(90);
+     myservoo.write(90);
         break;
       case DIR_LEFT:
         Serial.println("LEFT");
-        myservo.write(180);
-        myservo1.write(0);
-        delay(2000);
-        myservo.write(0);
-        myservo1.write(180);
+         myservo.write(100);
+      myservoo.write(80);
+      delay(3000);
+      myservo.write(80);
+      myservoo.write(100);
+      delay(3000);
+       myservo.write(90);
+     myservoo.write(90);
         break;
       case DIR_RIGHT:
         Serial.println("RIGHT");
-        myservo.write(180);
-        myservo1.write(0);
-        delay(2000);
-        myservo.write(0);
-        myservo1.write(180);
+        myservo.write(100);
+      myservoo.write(80);
+      delay(3000);
+      myservo.write(80);
+      myservoo.write(100);
+      delay(3000);
+       myservo.write(90);
+     myservoo.write(90);
         break;
       case DIR_NEAR:
         Serial.println("NEAR");
-        myservo.write(180);
-        myservo1.write(0);
-        delay(2000);
-        myservo.write(0);
-        myservo1.write(180);
+        myservo.write(100);
+      myservoo.write(80);
+      delay(3000);
+      myservo.write(80);
+      myservoo.write(100);
+      delay(3000);
+       myservo.write(90);
+     myservoo.write(90);
         break;
       case DIR_FAR:
         Serial.println("FAR");
-       myservo.write(180);
-        myservo1.write(0);
-        delay(2000);
-        myservo.write(0);
-        myservo1.write(180);
+        myservo.write(100);
+      myservoo.write(80);
+      delay(3000);
+      myservo.write(80);
+      myservoo.write(100);
+      delay(2900);
+       myservo.write(90);
+     myservoo.write(90);
         break;
       default:
         Serial.println("NONE");
     }
+    delay(500);
   }
 }
- 
