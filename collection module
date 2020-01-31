@@ -9,6 +9,7 @@
 #define ECHO_PIN    9 // Digital Arduino pin tied to echo pin on the ultrasonic sensor 10. 0 is d3 in nodemcu
 #define RST_PIN         5          // Configurable, see typical pin layout above
 #define SS_PIN          53
+
 LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE); 
 Servo accessservo;
 Servo continuousservoo;
@@ -19,15 +20,14 @@ Servo continuousservo;
 MFRC522 mfrc522(SS_PIN, RST_PIN);
 long duration;
 float distance;
-#define MAX_DISTANCE 30 // Maximum distance we want to ping for (in centimeters).
+#define MAX_DISTANCE 40 // Maximum distance we want to ping for (in centimeters).
  //I2C pins declaration
 //LiquidCrystal_I2C lcd(0x3F, 16, 2, POSITIVE); //early 0x27 for maker uno
 NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE); // NewPing setup of pins and maximum distance. Trigger pin sends out 
                                                     // the sound wave and the echo pin recieves it when it bounces back.
-int thresh [11] = {25,23,21,19,17,15,13,11,9,7,5}; // Create an array for thresholds. Each number in the array represents a distance. 
+int thresh [11] = {37,34,31,28,25,22,19,16,13,10,7}; // Create an array for thresholds. Each number in the array represents a distance. 
 int percentage;
 void setup() {
-  
   
   lcd.begin(16,2);//Defining 16 columns and 2 rows of lcd display
   lcd.backlight();
@@ -43,11 +43,6 @@ void setup() {
   continuousservoo.attach(4);
   continuousservoo.write(89.8);
 
-
-  
- // lcd.begin(16,2);//Defining 16 columns and 2 rows of lcd display
- // lcd.backlight();//To Power ON the back light
-//lcd.backlight();// To Power OFF the back light
 }
 void loop(){
   displaymodule();
@@ -165,10 +160,10 @@ void displaymodule() {
     percentage=80;
     continuousservo.write(100);
     continuousservoo.write(100);
-    delay(1350);
+    delay(3200);
     continuousservo.write(80);
     continuousservoo.write(80);
-    delay(2000);
+    delay(6000);
     continuousservo.write(89.8);
     continuousservoo.write(89.8);
     
@@ -180,10 +175,10 @@ void displaymodule() {
     percentage=90;
     continuousservo.write(100);
     continuousservoo.write(100);
-    delay(1350);
+    delay(3200);
     continuousservo.write(80);
     continuousservoo.write(80);
-    delay(2000);
+    delay(6000);
     continuousservo.write(89.8);
     continuousservoo.write(89.8);
     
@@ -193,6 +188,14 @@ void displaymodule() {
   else if(distance<thresh[9]&&distance>=thresh[10]){
   //  Serial.print(", 100% Full");
     percentage=100;
+    continuousservo.write(100);
+    continuousservoo.write(100);
+    delay(3200);
+    continuousservo.write(80);
+    continuousservoo.write(80);
+    delay(6000);
+    continuousservo.write(89.8);
+    continuousservoo.write(89.8);
     
 
   }
